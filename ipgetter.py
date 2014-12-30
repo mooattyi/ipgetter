@@ -1,52 +1,17 @@
 #!/usr/bin/env python
-"""
-This module is designed to fetch your external IP address from the internet.
-It is used mostly when behind a NAT.
-It picks your IP randomly from a serverlist to minimize request
-overhead on a single server
-
-If you want to add or remove your server from the list contact me on github
-
-
-API Usage
-=========
-
-    >>> import ipgetter
-    >>> myip = ipgetter.myip()
-    >>> myip
-    '8.8.8.8'
-
-    >>> ipgetter.IPgetter().test()
-
-    Number of servers: 47
-    IP's :
-    8.8.8.8 = 47 ocurrencies
-
-
-Copyright 2014 phoemur@gmail.com
-This work is free. You can redistribute it and/or modify it under the
-terms of the Do What The Fuck You Want To Public License, Version 2,
-as published by Sam Hocevar. See http://www.wtfpl.net/ for more details.
-"""
 
 import re
 import random
+import smtplib
+import errno
+import sys
 
-from sys import version_info
-
-PY3K = version_info >= (3, 0)
+PY3K = sys.version_info >= (3, 0)
 
 if PY3K:
     import urllib.request as urllib
 else:
     import urllib2 as urllib
-
-__version__ = "0.6"
-
-
-def myip():
-    return IPgetter().get_externalip()
-
 
 class IPgetter(object):
 
@@ -58,6 +23,7 @@ class IPgetter(object):
     '''
 
     def __init__(self):
+        
         self.server_list = ['http://ip.dnsexit.com',
                             'http://ifconfig.me/ip',
                             'http://ipecho.net/plain',
@@ -79,7 +45,6 @@ class IPgetter(object):
                             'http://www.ip-adress.com/',
                             'http://checkmyip.com/',
                             'http://www.tracemyip.org/',
-                            'http://checkmyip.net/',
                             'http://www.lawrencegoetz.com/programs/ipinfo/',
                             'http://www.findmyip.co/',
                             'http://ip-lookup.net/',
@@ -103,6 +68,7 @@ class IPgetter(object):
                             'http://wtfismyip.com/',
                             'http://ipinfo.io/',
                             'http://httpbin.org/ip']
+
 
     def get_externalip(self):
         '''
@@ -143,6 +109,7 @@ class IPgetter(object):
                 '(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)',
                 content)
             myip = m.group(0)
+            
             return myip if len(myip) > 0 else ''
         except Exception:
             return ''
@@ -152,7 +119,7 @@ class IPgetter(object):
 
     def test(self):
         '''
-        This functions tests the consistency of the servers
+        This function tests the consistency of the servers
         on the list when retrieving your IP.
         All results should be the same.
         '''
@@ -163,12 +130,32 @@ class IPgetter(object):
 
         ips = sorted(resultdict.values())
         ips_set = set(ips)
+        
         print('\nNumber of servers: {}'.format(len(self.server_list)))
-        print("IP's :")
-        for ip, ocorrencia in zip(ips_set, map(lambda x: ips.count(x), ips_set)):
-            print('{0} = {1} ocurrenc{2}'.format(ip if len(ip) > 0 else 'broken server', ocorrencia, 'y' if ocorrencia == 1 else 'ies'))
-        print('\n')
-        print(resultdict)
+        print("\nIP's :")
+        for ip, occurrence in zip(ips_set, map(lambda x: ips.count(x), ips_set)):
+            print('{0} = {1} occurrenc{2}'.format(ip if len(ip) > 0 else 'broken server', occurrence, 'e' if occurrence == 1 else 'es'))
+        
+        print("\nBroken servers :")
+        for server, ip in resultdict.items():
+            if(ip == ''):
+                sys.stdout.write("%s " % server)
+        print("\n")
+
+def myip():
+    """
+    This function returns the external IP address
+    """
+    
+    return IPgetter().get_externalip()
+    
+def test():
+    """
+    This function tests the hosts
+    """
+    
+    IPgetter().test()
 
 if __name__ == '__main__':
+    
     print(myip())
